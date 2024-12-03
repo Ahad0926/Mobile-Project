@@ -3,11 +3,16 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'src/app.dart';
 import 'src/services/auth_service.dart';
+import 'firebase_options.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions
+        .currentPlatform, // Ensure Firebase is initialized with correct options
+  );
+
   runApp(
     MultiProvider(
       providers: [
@@ -18,36 +23,31 @@ void main() async {
   );
 }
 
-import 'package:flutter/material.dart';
+// Utility Functions
 
 // Confirmation Dialog for user actions
 Future<bool> showConfirmationDialog(BuildContext context, String action) async {
   return await showDialog<bool>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Confirm Action'),
-        content: Text('Are you sure you want to \$action?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(false); // User canceled
-            },
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(true); // User confirmed
-            },
-            child: Text('Confirm'),
-          ),
-        ],
-      );
-    },
-  ) ?? false;
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Confirm Action'),
+            content: Text('Are you sure you want to $action?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text('Confirm'),
+              ),
+            ],
+          );
+        },
+      ) ??
+      false;
 }
-
-import 'package:flutter/material.dart';
 
 // Date Picker
 Future<void> showDatePickerDialog(BuildContext context) async {
@@ -60,7 +60,7 @@ Future<void> showDatePickerDialog(BuildContext context) async {
 
   if (selectedDate != null) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Selected Date: \$selectedDate')),
+      SnackBar(content: Text('Selected Date: ${selectedDate.toString()}')),
     );
   }
 }
@@ -74,17 +74,16 @@ Future<void> showTimePickerDialog(BuildContext context) async {
 
   if (selectedTime != null) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Selected Time: \$selectedTime')),
+      SnackBar(content: Text('Selected Time: ${selectedTime.format(context)}')),
     );
   }
 }
 
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// Notifications Setup
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-// Initialize Notifications
 void initializeNotifications() {
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('app_icon');
@@ -96,13 +95,12 @@ void initializeNotifications() {
   flutterLocalNotificationsPlugin.initialize(initializationSettings);
 }
 
-// Show Local Notification
 Future<void> showLocalNotification() async {
   const AndroidNotificationDetails androidPlatformChannelSpecifics =
       AndroidNotificationDetails(
     'reminder_channel',
     'Reminders',
-    'Channel for reminder notifications',
+    channelDescription: 'Channel for reminder notifications',
     importance: Importance.max,
     priority: Priority.high,
     showWhen: true,
